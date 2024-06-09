@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Medicines</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" />
+    <!-- Bootstrap Font Icon CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css" />
+    {% load static %}
+    <!-- <link rel="stylesheet" type="text/css" href="{% static 'ComponentEntry.css' %}"> -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #baf0f4;
+            margin: 0;
+            padding: 0;
+        }
+        .header {
+            background-color: #083838;
+            color: #ffffff;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+        .logo img {
+            width: 120px;
+            height: auto;
+            border-radius: 50%;
+            margin-right: 10px;
+            border: none;
+            outline: none;
+        }
+        .menu {
+            display: flex;
+        }
+        .menu li {
+            list-style: none;
+            margin-right: 20px;
+        }
+        .menu li:last-child {
+            margin-right: 0;
+        }
+        .menu li button {
+            background-color: transparent;
+            color: #fff;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 10px;
+            font-family: inherit;
+            font-size: inherit;
+        }
+        .card {
+            margin: 10px 0;
+            background-color: #c8f3ed;
+            align-items: center;
+        }
+        .card-body {
+            text-align: center;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            padding: 20px;
+        }
+        .btn-view, .btn-add {
+           
+            margin-top: 10px;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            background-color: transparent;
+            border: 1px solid #198754;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <img src="{% static 'images/logo.jpg' %}" alt="Company Logo">
+            <h1>EncryptoPharma</h1>
+        </div>
+        <ul class="menu">
+            <li><button class="button" onclick="window.location.href='/administrator'">Home</button></li>
+        </ul>
+    </header>
+    <div class="container">
+        <h1>All Medicines</h1>
+        <div class="row">
+            {% for medicine in medicines %}
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ medicine.medicine_name }}</h5>
+                            <button class="btn btn-view" onclick="showComponents('{{ medicine.id }}')">View</button>
+                            <button class="btn btn-add" onclick="addComponent('{{ medicine.id }}')">Add</button>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="container">
+        <h2>Components</h2>
+        <div class='cardcomponent'>
+            <ul id="components" class="list-group">
+                <!-- Component items will be injected here by JavaScript -->
+            </ul>
+        </div>
+    </div>
+    <div class="container" id="addComponentFormContainer" style="display: none;">
+        <h2>Add Component</h2>
+        <form id="addComponentForm">
+            <div class="mb-3">
+                <label for="componentName" class="form-label">Component Name</label>
+                <input type="text" class="form-control" id="componentName" name="componentName" required>
+            </div>
+            <input type="hidden" id="medicineId" name="medicineId">
+            <button type="submit" class="btn btn-primary">Add Component</button>
+        </form>
+    </div>
+    {% comment %} <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const componentsList = document.getElementById('components');
+
+            function showComponents(medicineId) {
+                fetch(`?medicine_id=${medicineId}`)
+                    .then(response => response.json())
+                    .then(components => {
+                        componentsList.innerHTML = '';
+                        components.forEach(component => {
+                            const li = document.createElement('li');
+                            li.className = 'list-group-item';
+                            li.textContent = component;
+                            componentsList.appendChild(li);
+                        });
+                    });
+            }
+
+            window.showComponents = showComponents;
+        });
+    </script> {% endcomment %}
+    <!-- Add this script to handle form submission and showing components -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const componentsList = document.getElementById('components');
+        const addComponentFormContainer = document.getElementById('addComponentFormContainer');
+        const addComponentForm = document.getElementById('addComponentForm');
+        const componentNameInput = document.getElementById('componentName');
+        const medicineIdInput = document.getElementById('medicineId');
+
+        function showComponents(medicineId) {
+            fetch(`?medicine_id=${medicineId}`)
+                .then(response => response.json())
+                .then(components => {
+                    componentsList.innerHTML = '';
+                    components.forEach(component => {
+                        const li = document.createElement('li');
+                        li.className = 'list-group-item';
+                        li.textContent = component;
+                        componentsList.appendChild(li);
+                    });
+                });
+        }
+
+        function addComponent(medicineId) {
+            addComponentFormContainer.style.display = 'block';
+            medicineIdInput.value = medicineId;
+        }
+
+        addComponentForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const componentName = componentNameInput.value;
+            const medicineId = medicineIdInput.value;
+
+            fetch(window.location.pathname, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}' // Include the CSRF token for security
+                },
+                body: JSON.stringify({ medicine_id: medicineId, component_name: componentName })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Component added successfully');
+                    showComponents(medicineId);
+                    addComponentFormContainer.style.display = 'none';
+                } else {
+                    alert('Failed to add component');
+                }
+            });
+        });
+
+        window.showComponents = showComponents;
+        window.addComponent = addComponent;
+    });
+</script>
+
+</body>
+</html>
+
